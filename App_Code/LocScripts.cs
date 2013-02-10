@@ -6,7 +6,7 @@ public static class LocScripts
 {
 	public static IHtmlString Render(params string[] paths)
 	{
-		string culture = CultureHelper.GetCulture().Name;
+		string culture = LocalizationTransform.GetCulture(HttpContext.Current).Name;
 
 		if (!BundleTable.EnableOptimizations)
 		{			

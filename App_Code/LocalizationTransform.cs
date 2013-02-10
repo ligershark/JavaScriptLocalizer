@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Resources;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
 using System.Web.Optimization;
 
 public class LocalizationTransform : IBundleTransform
@@ -30,14 +31,38 @@ public class LocalizationTransform : IBundleTransform
     public void Process(BundleContext context, BundleResponse response)
     {
         context.UseServerCache = false;
-        context.HttpContext.Response.Cache.VaryByHeaders["Accept-Language"] = true;
+
+        if (string.IsNullOrEmpty(context.HttpContext.Request.QueryString["lang"]))
+        {
+            context.HttpContext.Response.Cache.VaryByHeaders["Accept-Language"] = true;
+        }
+
         context.HttpContext.Response.Cache.VaryByParams["lang"] = true;
         context.HttpContext.Response.Cache.VaryByParams["v"] = true;
         context.HttpContext.Response.Cache.SetValidUntilExpires(true);
-
-        _culture = CultureHelper.GetCulture();
+            
+        _culture = GetCulture(HttpContext.Current);
 
         Localize(response);
+    }
+
+    public static CultureInfo GetCulture(HttpContext context)
+    {
+        HttpRequest request = context.Request;
+        string language = request.QueryString["lang"];
+
+        if (string.IsNullOrEmpty(language) && request.UserLanguages != null && request.UserLanguages.Length > 0)
+        {
+            language = request.UserLanguages[0];
+        }
+
+        try
+        {
+            return CultureInfo.CreateSpecificCulture(language);
+        }
+        catch { }
+
+        return CultureInfo.CurrentCulture;
     }
 
     private void Localize(BundleResponse response)
@@ -58,6 +83,6 @@ public class LocalizationTransform : IBundleTransform
         string result = _manager.GetString(value, _culture) ?? "TEXT NOT FOUND (" + value + ")";
 
         return result.Replace("'", "\\'")
-                   .Replace("\\", "\\\\");
+                     .Replace("\\", "\\\\");
     }
 }
