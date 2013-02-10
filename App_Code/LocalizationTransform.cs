@@ -9,7 +9,6 @@ using System.Web.Optimization;
 public class LocalizationTransform : IBundleTransform
 {
     private ResourceManager _manager;
-    private CultureInfo _culture;
     private Regex _regex;
 
     public LocalizationTransform(Type resourceType)
@@ -25,25 +24,35 @@ public class LocalizationTransform : IBundleTransform
     {
         _manager = resourceManager;
         _regex = regex;
-        _culture = CultureInfo.CurrentCulture;
     }
 
     public void Process(BundleContext context, BundleResponse response)
     {
         context.UseServerCache = false;
 
-        if (string.IsNullOrEmpty(context.HttpContext.Request.QueryString["lang"]))
+        if (context.HttpContext.CurrentHandler.ToString().Contains("BundleHandler"))
         {
-            context.HttpContext.Response.Cache.VaryByHeaders["Accept-Language"] = true;
+            context.HttpContext.Response.Cache.VaryByParams["lang"] = true;
+            context.HttpContext.Response.Cache.VaryByParams["v"] = true;
+            context.HttpContext.Response.Cache.SetValidUntilExpires(true);
+            context.HttpContext.Response.Cache.SetCacheability(response.Cacheability);
         }
 
-        context.HttpContext.Response.Cache.VaryByParams["lang"] = true;
-        context.HttpContext.Response.Cache.VaryByParams["v"] = true;
-        context.HttpContext.Response.Cache.SetValidUntilExpires(true);
-            
-        _culture = GetCulture(HttpContext.Current);
-
         Localize(response);
+    }
+
+    private void Localize(BundleResponse response)
+    {
+        StringBuilder sb = new StringBuilder(response.Content);
+        CultureInfo culture = GetCulture(HttpContext.Current);
+
+        foreach (Match match in _regex.Matches(response.Content))
+        {
+            string result = GetTranslation(match.Groups[1].Value, culture);
+            sb.Replace(match.Value, result);
+        }
+
+        response.Content = sb.ToString();
     }
 
     public static CultureInfo GetCulture(HttpContext context)
@@ -58,29 +67,19 @@ public class LocalizationTransform : IBundleTransform
 
         try
         {
-            return CultureInfo.CreateSpecificCulture(language);
+            if (!string.IsNullOrEmpty(language))
+            {
+                return CultureInfo.CreateSpecificCulture(language);
+            }
         }
         catch { }
 
         return CultureInfo.CurrentCulture;
     }
 
-    private void Localize(BundleResponse response)
+    private string GetTranslation(string value, CultureInfo culture)
     {
-        StringBuilder sb = new StringBuilder(response.Content);
-
-        foreach (Match match in _regex.Matches(response.Content))
-        {
-            string result = GetTranslation(match.Groups[1].Value);
-            sb.Replace(match.Value, result);
-        }
-
-        response.Content = sb.ToString();
-    }
-
-    private string GetTranslation(string value)
-    {
-        string result = _manager.GetString(value, _culture) ?? "TEXT NOT FOUND (" + value + ")";
+        string result = _manager.GetString(value, culture) ?? "TEXT NOT FOUND (" + value + ")";
 
         return result.Replace("'", "\\'")
                      .Replace("\\", "\\\\");

@@ -4,25 +4,21 @@ using System.Web.Optimization;
 
 public static class LocScripts
 {
-	public static IHtmlString Render(params string[] paths)
-	{
-		string culture = LocalizationTransform.GetCulture(HttpContext.Current).Name;
+    public static IHtmlString Render(params string[] paths)
+    {
+        string culture = LocalizationTransform.GetCulture(HttpContext.Current).Name;
 
-		if (!BundleTable.EnableOptimizations)
-		{			
-			var locPaths = paths.Select(p => p + "?lang=" + culture);
-			return Scripts.Render(locPaths.ToArray());
-		}
+        foreach (string path in paths.Where(p => p.StartsWith("~/")))
+        {
+            if (!BundleTable.EnableOptimizations)
+            {
+                var locPaths = paths.Select(p => p + "?lang=" + culture);
+                return Scripts.Render(locPaths.ToArray());
+            }
+        }
 
-		string tag = Scripts.Render(paths).ToString().Replace("?v=", "?lang=" + culture + "&v=");
-		return new HtmlString(tag);
-	}
+        string tag = Scripts.Render(paths).ToString().Replace("?v=", "?lang=" + culture + "&v=");
 
-	public static IHtmlString Render(bool insertLanguage, params string[] paths)
-	{
-		if (insertLanguage)
-			return Render(paths);
-
-		return Scripts.Render(paths);
-	}
+        return new HtmlString(tag);
+    }
 }
