@@ -72,7 +72,7 @@ public class LocalizationTransform : IBundleTransform
                 return CultureInfo.CreateSpecificCulture(language);
             }
         }
-        catch { }
+        catch (CultureNotFoundException) { }
 
         return CultureInfo.CurrentCulture;
     }
