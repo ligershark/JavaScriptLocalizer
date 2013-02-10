@@ -24,7 +24,7 @@ Then add the `LocalizerTransform` to the bundle and specify your resource:
 
     scripts.Transforms.Add(new LocalizationTransform(typeof(Resources.text)));
 
-In this case, a .resx file with the name `text' is used.
+In this case, a .resx file with the name `text` is used.
 
 And finally add the `ScriptBundle` to the `BundleTable`:
 
@@ -32,7 +32,7 @@ And finally add the `ScriptBundle` to the `BundleTable`:
 
 Now you have the bundles configured to use the JavaScriptLocalizer. 
 
-You can optionally use the `LocScript.Render` method to include your bundled scripts on your pages:
+You need to use the `LocScript.Render()` method to include your bundled scripts on your pages:
 
     @LocScripts.Render("~/locscript")
 
