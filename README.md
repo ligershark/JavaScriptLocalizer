@@ -20,17 +20,19 @@ The JavaScriptLocalizer plugs in to the BundleTable. To use it you must first de
     ScriptBundle scripts = new ScriptBundle("~/locscript");
     scripts.Include("~/scripts/loc1.js", "~/scripts/loc2.js");
 
-Then add the `LocalizerTransform` to the bundle:
+Then add the `LocalizerTransform` to the bundle and specify your resource:
 
     scripts.Transforms.Add(new LocalizationTransform(typeof(Resources.text)));
 
-and finally add the `ScriptBundle` to the `BundleTable`:
+In this case, a .resx file with the name `text' is used.
+
+And finally add the `ScriptBundle` to the `BundleTable`:
 
     BundleTable.Bundles.Add(scripts);
 
 Now you have the bundles configured to use the JavaScriptLocalizer. 
 
-You can optionally use the `LocScript.Render` method to include your bundled scripts.
+You can optionally use the `LocScript.Render` method to include your bundled scripts on your pages:
 
     @LocScripts.Render("~/locscript")
 
@@ -38,3 +40,9 @@ That will automatically append the current language as a URL parameter and produ
 
     <script src="/locscript?lang=en-US&v=Fn60oK0d4Rp7vKzYVdh4fKui3uBPccGcZXSmges4aac1"></script>
 
+## Using it in JavaScript ##
+The JavaScriptLocalizer looks for patterns in your script files to localize. The pattern uses colons and looks like this:
+
+    demo.innerHTML = "::nameOfPage::";
+
+The above maps directly to the resx key	`Resources.text.nameOfPage`.
