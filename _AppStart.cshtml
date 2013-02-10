@@ -2,10 +2,10 @@
 
 @{
     BundleTable.EnableOptimizations = true;
-
+    
     ScriptBundle scripts = new ScriptBundle("~/locscript");
     scripts.Include("~/scripts/loc1.js", "~/scripts/loc2.js");
     scripts.Transforms.Add(new LocalizationTransform(typeof(Resources.text)));
-
+    
     BundleTable.Bundles.Add(scripts);
 }
